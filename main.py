@@ -1,4 +1,6 @@
-from flask import Flask, jsonify,request
+import json
+
+from flask import Flask, jsonify, request, Response
 from flask_restful import Api, Resource, reqparse
 from pymongo import MongoClient
 from bson import json_util
@@ -18,8 +20,8 @@ if __name__ == "__main__":
 
     # Mongo Database Connection
     client=MongoClient("localhost", 27017, maxPoolSize=50)
-    db = client['tweets']
-    collection = db['pspi students']
+    db = client['apis']
+    collection = db['apis']
     # Parser for the get function
     parser = reqparse.RequestParser()
 
@@ -91,27 +93,33 @@ if __name__ == "__main__":
                  documents = collection.find({('entities.hashtags.' + str(limit)): {'$exists': True}})
                  for document in documents:
                      data.append(document)
-                 return jsonify(json_util.dumps(data))
+                 data = json_util.dumps(data)
+                 loaded_data = json.loads(data)
+                 return loaded_data
 
             elif hashtag:
                  print("Get 2")
                  documents = collection.find({'entities.hashtags.text': hashtag})
                  for document in documents:
                      data.append(document)
-                 return jsonify(json_util.dumps(data))
+                 data = json_util.dumps(data)
+                 loaded_data = json.loads(data)
+
+                 return loaded_data
 
             else:
                 print("Get 3")
                 documents = collection.find()
                 for document in documents:
                     data.append(document)
-                return jsonify(json_util.dumps(data))
+                data = json_util.dumps(data)
+                loaded_data = json.loads(data)
+                return loaded_data
 
 
     # Initializing the end-points
     api = Api(app)
     api.add_resource(Getter, "/tweets", endpoint="tweets_endpoint")
-    # api.add_resource(Functionality, "/tweets?morethan=<int:more_than>", endpoint="tweets_more_than_endpoint")
     api.add_resource(Getter, "/tweets/hashtag/<string:hashtag>", endpoint="hashtag_endpoint")
     api.add_resource(Deleter, "/tweets/hashtag/<string:hashtag>", endpoint="delete_endpoint")
     api.add_resource(Poster, "/tweets/post", endpoint="post_endpoint")
