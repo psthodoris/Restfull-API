@@ -1,13 +1,8 @@
 import json
-
-import cherrypy as cherrypy
-import simplejson as simplejson
-from flask import Flask, jsonify, request, Response, redirect, url_for
+from flask import Flask, request
 from flask_restful import Api, Resource, reqparse
 from pymongo import MongoClient
 from bson import json_util
-import requests
-
 
 # Sissy Dalampira-Kiprigli 2744 odalampir@csd.auth.gr
 # Papadopoulos Theodoros 2785 pstheodor@csd.auth.gr
@@ -21,7 +16,7 @@ app = Flask(__name__)
 if __name__ == "__main__":
 
     # Mongo Database Connection
-    client=MongoClient("localhost", 27017, maxPoolSize=50)
+    client = MongoClient("localhost", 27017, maxPoolSize=50)
     db = client['apis']
     collection = db['apis']
     # Parser for the get function
@@ -42,7 +37,7 @@ if __name__ == "__main__":
             count1 = counter1.count()
             print("Number of tweets with the hashtag: " + hashtag + " are :" + str(count1))
 
-            # Here code for database deletion of hashtag
+            # Database-deletion of hashtag
             myquery = {'entities.hashtags.text': hashtag}
             # collection.delete_one(myquery)
             collection.delete_many(myquery)
@@ -108,7 +103,6 @@ if __name__ == "__main__":
                      data.append(document)
                  data = json_util.dumps(data)
                  loaded_data = json.loads(data)
-
                  return loaded_data
 
             else:
@@ -126,7 +120,6 @@ if __name__ == "__main__":
     api.add_resource(Getter, "/tweets", endpoint="tweets_endpoint")
     api.add_resource(Getter, "/tweets/hashtag/<string:hashtag>", endpoint="hashtag_endpoint")
     api.add_resource(Deleter, "/tweets/hashtag/<string:hashtag>", endpoint="delete_endpoint")
-    #api.add_resource(Poster, "/tweets/post", endpoint="post_endpoint")
     api.add_resource(Poster, "/post", endpoint="post_endpoint")
 
 
