@@ -1,4 +1,8 @@
-from flask import Flask, jsonify,request
+import json
+
+import cherrypy as cherrypy
+import simplejson as simplejson
+from flask import Flask, jsonify, request, Response, redirect, url_for
 from flask_restful import Api, Resource, reqparse
 from pymongo import MongoClient
 from bson import json_util
@@ -17,9 +21,9 @@ app = Flask(__name__)
 if __name__ == "__main__":
 
     # Mongo Database Connection
-    client = MongoClient("localhost", 27017, maxPoolSize=50)
-    db = client['tweets']
-    collection = db['pspi students']
+    client=MongoClient("localhost", 27017, maxPoolSize=50)
+    db = client['apis']
+    collection = db['apis']
     # Parser for the get function
     parser = reqparse.RequestParser()
 
@@ -77,22 +81,6 @@ if __name__ == "__main__":
             collection.insert(answer)
             return str(answer), 201
 
-        # def post2(self):
-          #   print("Post function called.")
-            # New Implementation
-            # Source : https://github.com/chaitjo/flask-mongodb/blob/master/api.py
-           # json_data = request.get_json(force=True)
-            # json_data = requests.get(url).json()
-          #  user = str(json_data['user'])
-          #  message = str(json_data['message'])
-          #  age = str(json_data['age'])
-          #  answer = {'user': user, 'message': message, 'age': age}
-            # return jsonify(u=user, p=message, ag=age)
-          #  if collection.find_one({"user": user}):
-          #      return {"response": "input already exists."}, 400
-          #  else:
-          #      collection.insert(answer)
-          #      return str(answer), 201
 
     # Class handles GET requests
     class Getter(Resource):
@@ -109,29 +97,37 @@ if __name__ == "__main__":
                  documents = collection.find({('entities.hashtags.' + str(limit)): {'$exists': True}})
                  for document in documents:
                      data.append(document)
-                 return jsonify(json_util.dumps(data))
+                 data = json_util.dumps(data)
+                 loaded_data = json.loads(data)
+                 return loaded_data
 
             elif hashtag:
                  print("Get 2")
                  documents = collection.find({'entities.hashtags.text': hashtag})
                  for document in documents:
                      data.append(document)
-                 return jsonify(json_util.dumps(data))
+                 data = json_util.dumps(data)
+                 loaded_data = json.loads(data)
+
+                 return loaded_data
 
             else:
                 print("Get 3")
                 documents = collection.find()
                 for document in documents:
                     data.append(document)
-                return jsonify(json_util.dumps(data))
+                data = json_util.dumps(data)
+                loaded_data = json.loads(data)
+                return loaded_data
 
 
     # Initializing the end-points
     api = Api(app)
     api.add_resource(Getter, "/tweets", endpoint="tweets_endpoint")
-    # api.add_resource(Functionality, "/tweets?morethan=<int:more_than>", endpoint="tweets_more_than_endpoint")
     api.add_resource(Getter, "/tweets/hashtag/<string:hashtag>", endpoint="hashtag_endpoint")
     api.add_resource(Deleter, "/tweets/hashtag/<string:hashtag>", endpoint="delete_endpoint")
+    #api.add_resource(Poster, "/tweets/post", endpoint="post_endpoint")
     api.add_resource(Poster, "/post", endpoint="post_endpoint")
+
 
 app.run(debug=True, host='127.0.0.1', port=5110)
