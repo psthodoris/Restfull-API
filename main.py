@@ -17,7 +17,7 @@ app = Flask(__name__)
 if __name__ == "__main__":
 
     # Mongo Database Connection
-    client=MongoClient("localhost", 27017, maxPoolSize=50)
+    client = MongoClient("localhost", 27017, maxPoolSize=50)
     db = client['tweets']
     collection = db['pspi students']
     # Parser for the get function
@@ -59,22 +59,40 @@ if __name__ == "__main__":
     # Class handles POST requests
     class Poster(Resource):
 
+        # A paradigm http://127.0.0.1:5110/post?{"user":"alex","message":"demo","age":"91"}
         def post(self):
             print("Post function called.")
+            # 25.12.2018 implementation
+            try:
+                foofer = request.get_json(force=True)
+            except:
+                return "json input error", 400
+            if not ('user' | 'message' | 'age') in foofer:
+                return "missing parameters", 400
+            answer = {
+                'user': foofer['user'],
+                'message': foofer['message'],
+                'age': foofer['age']
+            }
+            collection.insert(answer)
+            return str(answer), 201
+
+        # def post2(self):
+          #   print("Post function called.")
             # New Implementation
             # Source : https://github.com/chaitjo/flask-mongodb/blob/master/api.py
-            json_data = request.get_json(force=True)
+           # json_data = request.get_json(force=True)
             # json_data = requests.get(url).json()
-            user = json_data['user']
-            message = json_data['message']
-            age = json_data['age']
-            answer = {'user': user, 'message': message, 'age': age}
+          #  user = str(json_data['user'])
+          #  message = str(json_data['message'])
+          #  age = str(json_data['age'])
+          #  answer = {'user': user, 'message': message, 'age': age}
             # return jsonify(u=user, p=message, ag=age)
-            if collection.find_one({"user": user}):
-                return {"response": "input already exists."}, 400
-            else:
-                collection.insert(answer)
-                return str(answer), 201
+          #  if collection.find_one({"user": user}):
+          #      return {"response": "input already exists."}, 400
+          #  else:
+          #      collection.insert(answer)
+          #      return str(answer), 201
 
     # Class handles GET requests
     class Getter(Resource):
@@ -114,6 +132,6 @@ if __name__ == "__main__":
     # api.add_resource(Functionality, "/tweets?morethan=<int:more_than>", endpoint="tweets_more_than_endpoint")
     api.add_resource(Getter, "/tweets/hashtag/<string:hashtag>", endpoint="hashtag_endpoint")
     api.add_resource(Deleter, "/tweets/hashtag/<string:hashtag>", endpoint="delete_endpoint")
-    api.add_resource(Poster, "/tweets/post", endpoint="post_endpoint")
+    api.add_resource(Poster, "/post", endpoint="post_endpoint")
 
 app.run(debug=True, host='127.0.0.1', port=5110)
