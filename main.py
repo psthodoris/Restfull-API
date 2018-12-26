@@ -78,8 +78,8 @@ if __name__ == "__main__":
                     and collection.find_one({"age": age}):
                 return {"response": "input already exists."}, 400
             else:
-                # Database insert
-                collection.insert(answer)
+                # Database insert not required
+                # collection.insert(answer)
                 return result, 201
 
 
