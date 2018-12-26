@@ -58,23 +58,29 @@ if __name__ == "__main__":
     # Class handles POST requests
     class Poster(Resource):
 
-        # A paradigm http://127.0.0.1:5110/post?{"user":"alex","message":"demo","age":"91"}
+        # 25.12.2018 Second Implementation
         def post(self):
             print("Post function called.")
-            # 25.12.2018 implementation
-            try:
-                foofer = request.get_json(force=True)
-            except:
-                return "json input error", 400
-            if not ('user' | 'message' | 'age') in foofer:
-                return "missing parameters", 400
-            answer = {
-                'user': foofer['user'],
-                'message': foofer['message'],
-                'age': foofer['age']
-            }
-            collection.insert(answer)
-            return str(answer), 201
+            # Parse arguments
+            parser.add_argument('user', type=str, required=True, help='Error finding username.')
+            parser.add_argument('message', type=str, required=True, help='Error finding message.')
+            parser.add_argument('age', type=int, required=True, help='Error finding age.')
+            args = parser.parse_args()
+            user = args['user']
+            message = args['message']
+            age = args['age']
+            # Setting up the result to show
+            answer = {"user": user, "message": message, "age": age}
+            ans = json_util.dumps(answer)
+            result = json.loads(ans)
+            # If a record already exists
+            if collection.find_one({"user": user}) and collection.find_one({"message": message}) \
+                    and collection.find_one({"age": age}):
+                return {"response": "input already exists."}, 400
+            else:
+                # Database insert
+                collection.insert(answer)
+                return result, 201
 
 
     # Class handles GET requests
